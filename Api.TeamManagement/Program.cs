@@ -13,6 +13,7 @@ internal class Program
         builder.Services.AddDbContext<TeamManagementDbContext>();
 
         builder.Services.AddScoped<IDepartmentProvider, DepartmentProvider>();
+        builder.Services.AddScoped<IMemberProvider, MemberProvider>();
         
         // Add services to the container.
 

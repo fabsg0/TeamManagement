@@ -22,7 +22,7 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to fetch departments.");
-            return NotFound(ex);
+            return NotFound();
         }
     }
 
@@ -38,7 +38,7 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to fetch department.");
-            return NotFound(ex);
+            return NotFound();
         }
     }
     
@@ -54,7 +54,7 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to create department.");
-            return BadRequest(ex);
+            return BadRequest();
         }
     }
     
@@ -70,7 +70,7 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to update department.");
-            return BadRequest(ex);
+            return BadRequest();
         }
     }
     
@@ -86,7 +86,7 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to delete department.");
-            return BadRequest(ex);
+            return BadRequest();
         }
     }
 }
