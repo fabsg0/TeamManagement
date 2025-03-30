@@ -1,4 +1,6 @@
 using Api.TeamManagement.Database;
+using Api.TeamManagement.Providers;
+using Api.TeamManagement.Providers.Contracts;
 
 namespace Api.TeamManagement;
 
@@ -9,10 +11,15 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddDbContext<TeamManagementDbContext>();
+
+        builder.Services.AddScoped<IDepartmentProvider, DepartmentProvider>();
         
         // Add services to the container.
 
         builder.Services.AddControllers();
+        
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
@@ -21,7 +28,8 @@ internal class Program
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
 
         app.UseHttpsRedirection();
