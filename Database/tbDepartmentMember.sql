@@ -1,4 +1,4 @@
-﻿USE [MemberManagement_lwlbrf2_Db]
+﻿USE [TeamManagementDb]
 GO
 
 /****** Object:  Table [dbo].[tbDepartmentMember]    Script Date: 31.03.2025 08:39:54 ******/
