@@ -1,10 +1,8 @@
 ﻿@page "/"
-@using Api.TeamManagement.Entities
 @using Api.TeamManagement.Models
-@using Web.TeamManagement.Blazor.Models
 @using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.Components.PopUps
 @inject IMemberService MemberService
-@inject IDepartmentService DepartmentService
 @inject ILogger<Home> Logger
 
 <PageTitle>Home</PageTitle>
@@ -15,6 +13,9 @@
 }
 else
 {
+    <button type="button" class="btn btn-primary" @onclick="@(() => _showCreatePopup = true)">Create</button>
+    <br/>
+
     <table class="table table-hover">
         <thead>
         <tr>
@@ -24,70 +25,72 @@ else
             <th scope="col">Status</th>
             <th scope="col">MembershipFee</th>
             <th scope="col">Departments</th>
+            <th scope="col"></th>
         </tr>
         </thead>
         <tbody>
         @foreach (var member in _members)
         {
-            <tr>
+            <tr @onclick="@(() => _selectedMember = member)" class="@(_selectedMember == member ? "table-active" : "")">
                 <td>@member.FirstName</td>
                 <td>@member.LastName</td>
-                <td>@member.Birthdate</td>
+                <td>@member.Birthdate.ToString()</td>
                 <td>@member.Status</td>
                 <td>@member.MembershipFee</td>
                 <td>@string.Join(",", member.Departments.Select(x => x.Name))</td>
+                <td>
+                    <button type="button" class="btn btn-warning"><i class="fa fa-pen"></i></button>
+                    <button type="button" class="btn btn-danger"><i class="fa fa-trash"
+                                                                    @onclick="@(() => _showDeletePopup = true)"></i>
+                    </button>
+                </td>
             </tr>
         }
         </tbody>
     </table>
-
-
-    <form>
-        <div class="form-group">
-            <label for="firstName">FirstName</label>
-            <InputText type="text" class="form-control" id="firstName" placeholder="Enter firstName"
-                       @bind-Value="_memberToCreate.Member.FirstName"></InputText>
-        </div>
-        <div class="form-group">
-            <label for="lastName">LastName</label>
-            <InputText type="text" class="form-control" id="lastName" placeholder="Enter lastName"
-                       @bind-Value="_memberToCreate.Member.LastName"/>
-        </div>
-        <div class="form-group">
-            <label for="birthdate">Birthdate</label>
-            <InputDate Type="InputDateType.Date" class="form-control" id="birthdate" placeholder="Enter birthdate"
-                       @bind-Value="_birthDate"/>
-        </div>
-        <div class="form-group">
-            <label for="departments">Departments</label>
-            @foreach (var department in _departments)
-            {
-                <InputCheckbox @bind-Value="department.IsAssigned"></InputCheckbox>
-            }
-        </div>
-
-
-        <button type="button" class="btn btn-success" @onclick="CreateMember">Submit</button>
-
-    </form>
 }
 
+@if (_showCreatePopup)
+{
+    <CreateMemberPopup OnClose="@(async () =>
+                                    {
+                                        _showCreatePopup = false;
+                                        await FetchData();
+                                    })"/>
+}
+
+@if (_showDeletePopup)
+{
+    <DeleteMemberPopup OnClose="@(async () =>
+                                {
+                                    _showDeletePopup = false;
+                                    await FetchData();
+                                })"
+                       MemberId="_selectedMember.Id"/>
+}
 
 @code {
 
     private List<MemberModel> _members = [];
     private bool _isLoading = true;
+    private bool _showCreatePopup;
+    private bool _showDeletePopup;
 
-    private List<DepartmentModel> _departments = [];
-    private DateTime _birthDate;
-    private MemberModelDto _memberToCreate = new();
+    private MemberModel _selectedMember = new();
 
     protected override async Task OnInitializedAsync()
     {
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        _isLoading = true;
+        
         try
         {
             _members = await MemberService.GetMembersAsync();
-            await FetchDepartments();
+
         }
         catch (Exception ex)
         {
@@ -96,42 +99,6 @@ else
         finally
         {
             _isLoading = false;
-        }
-    }
-
-    private async Task FetchDepartments()
-    {
-        var department = await DepartmentService.GetDepartmentsAsync();
-
-        foreach (var dep in department)
-        {
-            _departments.Add(new DepartmentModel
-            {
-                Id = dep.Id,
-                Name = dep.Name,
-                IsAssigned = false
-            });
-        }
-    }
-
-    private async Task CreateMember()
-    {
-        try
-        {
-            foreach (var department in _departments)
-            {
-                if (department.IsAssigned)
-                {
-                    _memberToCreate.DepartmentIds.Add(department.Id);
-                }
-            }
-
-            _memberToCreate.Member.Birthdate = DateOnly.FromDateTime(_birthDate);
-            await MemberService.CreateMemberAsync(_memberToCreate);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to create member.");
         }
     }
 

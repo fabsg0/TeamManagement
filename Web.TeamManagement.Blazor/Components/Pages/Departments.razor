@@ -1,21 +1,44 @@
 ﻿@page "/Departments"
+@using Api.TeamManagement.Entities
 @using Web.TeamManagement.Blazor.Services.Contracts
 @inject IDepartmentService DepartmentService
 @inject ILogger<Departments> Logger
 
 <h3>Departments</h3>
 
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Icon</th>
+        <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var department in _departments)
+    {
+        <tr @onclick="@(() => _selectedDepartment = department)" class="@(_selectedDepartment == department ? "table-active" : "")">
+            <td>@department.Name</td>
+            <td><i class="fa fa-@department.Icon"></i></td>
+            <td>
+                <button type="button" class="btn btn-warning"><i class="fa fa-pen"></i></button>
+                <button type="button" class="btn btn-danger"><i class="fa fa-trash"></i></button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
 @code {
 
+    private List<TbDepartment> _departments = [];
+    private TbDepartment _selectedDepartment = new();
+    
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var departments = await DepartmentService.GetDepartmentsAsync();
-            foreach (var department in departments)
-            {
-                Logger.LogInformation(department.Name);
-            }
+            _departments = await DepartmentService.GetDepartmentsAsync();
         }
         catch (Exception ex)
         {

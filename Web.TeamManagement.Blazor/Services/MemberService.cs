@@ -22,9 +22,12 @@ public class MemberService(HttpClient httpClient) : IMemberService
         return member ?? throw new Exception("Member not found.");
     }
 
-    public async Task CreateMemberAsync(MemberModelDto member, CancellationToken cancellationToken = default)
+    public async Task<HttpResponseMessage> CreateMemberAsync(MemberModelDto member, CancellationToken cancellationToken = default)
     {
-        await httpClient.PostAsync("http://localhost:5179/Member/CreateMember", JsonContent.Create(member),
+        member.Member.Status = "active";
+        member.Member.MembershipFee = 0;
+        
+        return await httpClient.PostAsync("http://localhost:5179/Member/CreateMember", JsonContent.Create(member),
             cancellationToken);
     }
 
