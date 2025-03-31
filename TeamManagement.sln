@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.TeamManagement", "Api.TeamManagement\Api.TeamManagement.csproj", "{3D74AAE1-8049-4DAF-8FA9-BD11CEB80906}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.TeamManagement.Blazor", "Web.TeamManagement.Blazor\Web.TeamManagement.Blazor.csproj", "{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{3D74AAE1-8049-4DAF-8FA9-BD11CEB80906}.Release|x64.Build.0 = Release|Any CPU
 		{3D74AAE1-8049-4DAF-8FA9-BD11CEB80906}.Release|x86.ActiveCfg = Release|Any CPU
 		{3D74AAE1-8049-4DAF-8FA9-BD11CEB80906}.Release|x86.Build.0 = Release|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Release|x64.Build.0 = Release|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{BEA2F19A-2790-4D07-BAAE-4CA532F516AE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

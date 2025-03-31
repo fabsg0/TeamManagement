@@ -1,5 +1,7 @@
 ﻿Api.TeamManagement/bin/
 Api.TeamManagement/obj/
+Web.TeamManagement.Blazor/bin/
+Web.TeamManagement.Blazor/obj/
 .idea/
 .vs/
 
