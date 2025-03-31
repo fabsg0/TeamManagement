@@ -26,9 +26,5 @@ public partial class TbMember
 
     public int MembershipFee { get; set; }
 
-    public Guid? DepartmentMemberId { get; set; }
-
-    public virtual TbDepartmentMember? DepartmentMember { get; set; }
-
     public virtual ICollection<TbDepartmentMember> TbDepartmentMembers { get; set; } = new List<TbDepartmentMember>();
 }

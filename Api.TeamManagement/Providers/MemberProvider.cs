@@ -1,4 +1,5 @@
 using Api.TeamManagement.Database;
+using Api.TeamManagement.Entities;
 using Api.TeamManagement.Models;
 using Api.TeamManagement.Providers.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,7 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
             .Include(tbDepartmentMember => tbDepartmentMember.Department)
             .ToListAsync(cancellationToken);
 
-        var members = new List<MemberModel>();
-
-        foreach (var rawMember in rawMembers)
-        {
-            members.Add(new MemberModel
+        return rawMembers.Select(rawMember => new MemberModel
             {
                 Id = rawMember.Id,
                 FirstName = rawMember.FirstName,
@@ -34,20 +31,21 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
                 City = rawMember.City,
                 Status = rawMember.Status,
                 MembershipFee = rawMember.MembershipFee,
-                Departments = departmentMembers
-                    .Where(dm => dm.MemberId == rawMember.Id)
-                    .Select(dm => (dm.Department?.Name, dm.Department?.Icon))
+                Departments = departmentMembers.Where(x => x.MemberId == rawMember.Id)
+                    .Select(x => new DepartmentInfoModel
+                    {
+                        Name = x.Department?.Name,
+                        Icon = x.Department?.Icon
+                    })
                     .ToList()
-            });
-        }
-
-        return members;
+            })
+            .ToList();
     }
 
     public async Task<MemberModel> GetMemberById(Guid id, CancellationToken cancellationToken)
     {
         var rawMember = await dbContext.TbMembers
-            .SingleOrDefaultAsync(member => member.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (rawMember is null) throw new Exception("Member not found.");
 
@@ -71,26 +69,104 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
             Status = rawMember.Status,
             MembershipFee = rawMember.MembershipFee,
             Departments = departmentMember
-                .Where(dm => dm.MemberId == rawMember.Id)
-                .Select(dm => (dm.Department?.Name, dm.Department?.Icon))
+                .Where(x => x.MemberId == rawMember.Id)
+                .Select(x => new DepartmentInfoModel
+                {
+                    Name = x.Department?.Name,
+                    Icon = x.Department?.Icon
+                })
                 .ToList()
         };
 
         return member;
     }
 
-    public async Task CreateMember(MemberModel member, CancellationToken cancellationToken)
+    public async Task CreateMember(MemberModel member, List<Guid> departmentIds, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var memberToCreate = new TbMember
+        {
+            Id = Guid.NewGuid(),
+            FirstName = member.FirstName,
+            LastName = member.LastName,
+            Birthdate = member.Birthdate,
+            Email = member.Email,
+            Telephone = member.Telephone,
+            Street = member.Street,
+            Number = member.Number,
+            ZipCode = member.ZipCode,
+            City = member.City,
+            Status = member.Status,
+            MembershipFee = member.MembershipFee
+        };
+
+        await dbContext.TbMembers.AddAsync(memberToCreate, cancellationToken);
+
+        foreach (var departmentMember in departmentIds.Select(departmentId => new TbDepartmentMember
+                 {
+                     Id = Guid.NewGuid(),
+                     DepartmentId = departmentId,
+                     MemberId = memberToCreate.Id
+                 }))
+        {
+            await dbContext.TbDepartmentMembers.AddAsync(departmentMember, cancellationToken);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
-    
-    public async Task UpdateMember(MemberModel member, CancellationToken cancellationToken)
+
+    public async Task UpdateMember(MemberModel member, List<Guid> departmentIds, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var existingMember = await dbContext.TbMembers
+            .SingleOrDefaultAsync(x => x.Id == member.Id, cancellationToken);
+
+        if (existingMember is null) throw new Exception("Member not found.");
+
+        existingMember.FirstName = member.FirstName;
+        existingMember.LastName = member.LastName;
+        existingMember.Birthdate = member.Birthdate;
+        existingMember.Email = member.Email;
+        existingMember.Telephone = member.Telephone;
+        existingMember.Street = member.Street;
+        existingMember.Number = member.Number;
+        existingMember.ZipCode = member.ZipCode;
+        existingMember.City = member.City;
+        existingMember.Status = member.Status;
+        existingMember.MembershipFee = member.MembershipFee;
+
+        var existingLinks = await dbContext.TbDepartmentMembers
+            .Where(x => x.MemberId == member.Id)
+            .ToListAsync(cancellationToken);
+
+        dbContext.TbDepartmentMembers.RemoveRange(existingLinks);
+
+        foreach (var newLink in departmentIds.Select(departmentId => new TbDepartmentMember
+                 {
+                     Id = Guid.NewGuid(),
+                     DepartmentId = departmentId,
+                     MemberId = member.Id
+                 }))
+        {
+            await dbContext.TbDepartmentMembers.AddAsync(newLink, cancellationToken);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
-    
+
+
     public async Task DeleteMember(Guid id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var member = await dbContext.TbMembers
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (member is null) throw new Exception("Member not found.");
+
+        var departmentLinks = await dbContext.TbDepartmentMembers
+            .Where(x => x.MemberId == id)
+            .ToListAsync(cancellationToken);
+
+        dbContext.TbDepartmentMembers.RemoveRange(departmentLinks);
+        dbContext.TbMembers.Remove(member);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

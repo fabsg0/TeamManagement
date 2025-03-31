@@ -11,6 +11,4 @@ public partial class TbDepartmentMember
     public virtual TbDepartment? Department { get; set; }
 
     public virtual TbMember? Member { get; set; }
-
-    public virtual ICollection<TbMember> TbMembers { get; set; } = new List<TbMember>();
 }

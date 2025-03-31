@@ -26,5 +26,5 @@ public class MemberModel
 
     public int MembershipFee { get; set; }
 
-    public List<(string? Name, string? Icon)> Departments { get; set; }
+    public List<DepartmentInfoModel> Departments { get; set; }
 }

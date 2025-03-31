@@ -23,7 +23,7 @@ public class MemberController(IMemberProvider memberProvider, ILogger<MemberCont
             return NotFound();
         }
     }
-    
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(MemberModel), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMemberById(Guid id, CancellationToken cancellationToken)
@@ -37,6 +37,54 @@ public class MemberController(IMemberProvider memberProvider, ILogger<MemberCont
         {
             logger.LogError(ex, "Failed to fetch member.");
             return NotFound();
+        }
+    }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateMember([FromBody] MemberModelDto member, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await memberProvider.CreateMember(member.Member, member.DepartmentIds, cancellationToken);
+            return CreatedAtAction(nameof(GetMemberById), new { id = member.Member.Id }, member);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create member.");
+            return BadRequest();
+        }
+    }
+
+    [HttpPut]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateMember([FromBody] MemberModelDto member, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await memberProvider.UpdateMember(member.Member, member.DepartmentIds, cancellationToken);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to update member.");
+            return BadRequest();
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteMember(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await memberProvider.DeleteMember(id, cancellationToken);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to delete member.");
+            return BadRequest();
         }
     }
 }

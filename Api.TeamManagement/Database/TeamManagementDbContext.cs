@@ -23,7 +23,7 @@ public partial class TeamManagementDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https: //go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer(
-            "Data Source=localhost;Initial Catalog=TeamManagementDb;Trusted_Connection=True;TrustServerCertificate=True");
+            "Data Source=lwlsv93;Initial Catalog=MemberManagement_lwlbrf2_db;Trusted_Connection=True;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +39,8 @@ public partial class TeamManagementDbContext : DbContext
         modelBuilder.Entity<TbDepartmentMember>(entity =>
         {
             entity.ToTable("tbDepartmentMember");
+
+            entity.HasIndex(e => new { e.MemberId, e.DepartmentId }, "IX_DepartmentMember_Unique").IsUnique();
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
 
@@ -66,10 +68,6 @@ public partial class TeamManagementDbContext : DbContext
                 .HasDefaultValue("active");
             entity.Property(e => e.Street).HasMaxLength(100);
             entity.Property(e => e.Telephone).HasMaxLength(50);
-
-            entity.HasOne(d => d.DepartmentMember).WithMany(p => p.TbMembers)
-                .HasForeignKey(d => d.DepartmentMemberId)
-                .HasConstraintName("FK_tbMembers_tbDepartmentMember");
         });
 
         OnModelCreatingPartial(modelBuilder);
