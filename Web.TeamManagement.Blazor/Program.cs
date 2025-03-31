@@ -1,6 +1,7 @@
 using Web.TeamManagement.Blazor.Components;
 using Web.TeamManagement.Blazor.Services;
 using Web.TeamManagement.Blazor.Services.Contracts;
+using Web.TeamManagement.Blazor.ToastMessage;
 
 namespace Web.TeamManagement.Blazor;
 
@@ -10,6 +11,7 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Services.AddScoped<ToastService>();
         builder.Services.AddHttpClient<IDepartmentService, DepartmentService>();
         builder.Services.AddHttpClient<IMemberService, MemberService>();
 
