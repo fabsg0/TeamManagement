@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Api.TeamManagement.Entities;
+using Api.TeamManagement.Models;
 using Api.TeamManagement.Providers.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,11 +45,11 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
     
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreateDepartment([FromBody] string name, string? icon, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateDepartment([FromBody] DepartmentDto department, CancellationToken cancellationToken)
     {
         try
         {
-            await departmentProvider.CreateDepartment(name, cancellationToken, icon);
+            await departmentProvider.CreateDepartment(department.Name, cancellationToken, department.Icon);
             return CreatedAtAction(nameof(GetDepartments), null);
         }
         catch (Exception ex)
@@ -60,11 +61,11 @@ public class DepartmentController(IDepartmentProvider departmentProvider, ILogge
     
     [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> UpdateDepartment(Guid id, [FromBody] string name,  string icon, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateDepartment(Guid id, [FromBody] DepartmentDto department, CancellationToken cancellationToken)
     {
         try
         {
-            await departmentProvider.UpdateDepartment(id, name, cancellationToken, icon);
+            await departmentProvider.UpdateDepartment(id,department.Name, cancellationToken, department.Icon);
             return Ok();
         }
         catch (Exception ex)

@@ -1,0 +1,76 @@
+﻿@using Web.TeamManagement.Blazor.ToastMessage
+@inject ToastService ToastService
+@inject ILogger<Toast> Logger
+
+@if (ShowMessage)
+{
+    <div class="toast-message-container">
+        <div class="toast-message-box @MessageTypeClass">
+            <span class="toast-message-content">@MessageContent</span>
+        </div>
+    </div>
+}
+
+@code {
+    private bool ShowMessage { get; set; }
+    private string MessageContent { get; set; } = string.Empty;
+    private string MessageType { get; set; } = "success";
+    private int DismissAfter { get; set; } = 5;
+
+    private string MessageTypeClass => MessageType switch
+    {
+        "success" => "toast-message-success",
+        "failure" => "toast-message-failure",
+        "alert" => "toast-message-alert",
+        "warning" => "toast-message-warning",
+        _ => "toast-message-default"
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ShowMessage && DismissAfter > 0)
+        {
+            await Task.Delay(DismissAfter * 1000);
+            HideMessage();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += ShowToast;
+        ToastService.OnHide += HideMessage;
+    }
+
+    private async void ShowToast(string message, string type, int dismissAfter)
+    {
+        try
+        {
+            MessageContent = message;
+            MessageType = type;
+            ShowMessage = true;
+
+            await InvokeAsync(StateHasChanged);
+
+            if (dismissAfter <= 0) return;
+            await Task.Delay(dismissAfter * 1000);
+            HideMessage();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "");
+        }
+    }
+
+    private void HideMessage()
+    {
+        ShowMessage = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnShow -= ShowToast;
+        ToastService.OnHide -= HideMessage;
+    }
+
+}

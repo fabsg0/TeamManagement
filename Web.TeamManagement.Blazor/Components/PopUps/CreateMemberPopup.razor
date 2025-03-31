@@ -1,0 +1,130 @@
+﻿@using System.Net
+@using Api.TeamManagement.Models
+@using Web.TeamManagement.Blazor.CustomComponents
+@using Web.TeamManagement.Blazor.Models
+@using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.ToastMessage
+@inject IMemberService MemberService
+@inject IDepartmentService DepartmentService
+@inject ToastService ToastService
+@inject ILogger<CreateMemberPopup> Logger
+
+<PopUp IsVisible="true" IsVisibleChanged="@(async () => await OnClose.InvokeAsync())">
+    <PopupHeader>Create Member</PopupHeader>
+    <PopupContent>
+        <form>
+            <div class="form-group">
+                <label for="firstName">FirstName</label>
+                <InputText type="text" class="form-control" id="firstName" placeholder="Enter firstName"
+                           @bind-Value="_memberToCreate.Member.FirstName"></InputText>
+            </div>
+            <div class="form-group">
+                <label for="lastName">LastName</label>
+                <InputText type="text" class="form-control" id="lastName" placeholder="Enter lastName"
+                           @bind-Value="_memberToCreate.Member.LastName"/>
+            </div>
+            <div class="form-group">
+                <label for="birthdate">Birthdate</label>
+                <InputDate Type="InputDateType.Date" class="form-control" id="birthdate" placeholder="Enter birthdate"
+                           @bind-Value="_birthDate"/>
+            </div>
+            <div class="form-group">
+                <label>Departments</label>
+                <br/>
+                @foreach (var department in _departments)
+                {
+                    <InputCheckbox aria-describedby="departmentHelp"
+                                   @bind-Value="department.IsAssigned"></InputCheckbox>
+                    <small id="departmentHelp" class="form-text text-muted">@department.Name</small>
+                    <br/>
+                }
+            </div>
+        </form>
+    </PopupContent>
+    <PopupFooter>
+        <button disabled="@_submitButtonDisabled"
+                type="button"
+                class="btn btn-success"
+                @onclick="CreateMember">
+            Submit
+        </button>
+        <button class="btn btn-danger" @onclick="OnClose">Cancel</button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool _submitButtonDisabled;
+    private List<DepartmentModel> _departments = [];
+    private DateTime _birthDate;
+
+    private MemberModelDto _memberToCreate = new()
+    {
+        Member = new MemberModel(),
+        DepartmentIds = []
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await FetchDepartments();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to fetch departments.");
+        }
+    }
+
+    private async Task FetchDepartments()
+    {
+        var department = await DepartmentService.GetDepartmentsAsync();
+
+        foreach (var dep in department)
+        {
+            _departments.Add(new DepartmentModel
+            {
+                Id = dep.Id,
+                Name = dep.Name,
+                IsAssigned = false
+            });
+        }
+    }
+
+    private async Task CreateMember()
+    {
+        try
+        {
+            _submitButtonDisabled = true;
+            foreach (var department in _departments)
+            {
+                if (department.IsAssigned)
+                {
+                    _memberToCreate.DepartmentIds.Add(department.Id);
+                }
+            }
+
+            _memberToCreate.Member.Birthdate = DateOnly.FromDateTime(_birthDate);
+            var response = await MemberService.CreateMemberAsync(_memberToCreate);
+
+            if (response.StatusCode != HttpStatusCode.Created)
+                throw new Exception($"Http StatusCode was not expected. It was {response.StatusCode}.");
+
+            ToastService.ShowSuccess("Member created");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create member.");
+            ToastService.ShowError("Failed to create member.");
+        }
+        finally
+        {
+            _submitButtonDisabled = false;
+            _memberToCreate = new MemberModelDto();
+            _departments = [];
+            await OnClose.InvokeAsync();
+        }
+    }
+
+}

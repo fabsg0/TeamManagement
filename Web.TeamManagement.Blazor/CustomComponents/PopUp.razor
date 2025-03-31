@@ -1,0 +1,32 @@
+﻿<div class="@(IsVisible ? "showAnim" : "d-none")">
+    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block">
+        <div class="modal-dialog" style="margin:1.75rem auto; --bs-modal-width: 500px">
+            <div class="modal-content" style="--bs-modal-bg: white;">
+                <div class="modal-header bg-primary" style="--bs-modal-header-padding: 1rem 1rem;">
+                    <div class="modal-title text-white">@PopupHeader</div>
+                </div>
+                <div class="modal-body" style="--bs-modal-padding: 1rem;">
+                    @PopupContent
+                </div>
+                <div class="modal-footer"
+                     style="
+                     --bs-modal-padding: .75rem; 
+                     --bs-modal-footer-gap: .75rem; 
+                     --bs-modal-footer-border-width: 1px; 
+                     --bs-modal-footer-border-color: #dee2e6;">
+                    @PopupFooter
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="@(IsVisible ? "show" : "d-none") modal-backdrop fade"></div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public required RenderFragment PopupContent { get; set; }
+    [Parameter] public required RenderFragment PopupHeader { get; set; }
+    [Parameter] public required RenderFragment PopupFooter { get; set; }
+}

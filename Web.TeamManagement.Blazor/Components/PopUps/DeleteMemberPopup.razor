@@ -1,0 +1,39 @@
+﻿@using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.CustomComponents
+@using Web.TeamManagement.Blazor.ToastMessage
+@inject IMemberService MemberService
+@inject ToastService ToastService
+@inject ILogger<DeleteMemberPopup> Logger
+
+<PopUp IsVisible="true">
+    <PopupHeader>Delete Member with Id <strong>@MemberId</strong></PopupHeader>
+    <PopupContent><strong>Are you sure, you want to delete this member?</strong></PopupContent>
+    <PopupFooter>
+        <button type="button" @onclick="DeleteMember" class="btn btn-danger">Delete</button>
+        <button type="button" @onclick="OnClose" class="btn btn-secondary">Cancel</button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public Guid MemberId { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task DeleteMember()
+    {
+        try
+        {
+            await MemberService.DeleteMemberAsync(MemberId);
+            ToastService.ShowSuccess("Member deleted.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to delete member.");
+            ToastService.ShowError("Failed to delete member.");
+        }
+        finally
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+}

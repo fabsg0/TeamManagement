@@ -1,0 +1,105 @@
+﻿@page "/"
+@using Api.TeamManagement.Models
+@using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.Components.PopUps
+@inject IMemberService MemberService
+@inject ILogger<Home> Logger
+
+<PageTitle>Home</PageTitle>
+
+@if (_isLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <button type="button" class="btn btn-primary" @onclick="@(() => _showCreatePopup = true)">Create</button>
+    <br/>
+
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th scope="col">FirstName</th>
+            <th scope="col">LastName</th>
+            <th scope="col">BirthDate</th>
+            <th scope="col">Status</th>
+            <th scope="col">MembershipFee</th>
+            <th scope="col">Departments</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var member in _members)
+        {
+            <tr @onclick="@(() => _selectedMember = member)" class="@(_selectedMember == member ? "table-active" : "")">
+                <td>@member.FirstName</td>
+                <td>@member.LastName</td>
+                <td>@member.Birthdate.ToString()</td>
+                <td>@member.Status</td>
+                <td>@member.MembershipFee</td>
+                <td>@string.Join(",", member.Departments.Select(x => x.Name))</td>
+                <td>
+                    <button type="button" class="btn btn-warning"><i class="fa fa-pen"></i></button>
+                    <button type="button" class="btn btn-danger"><i class="fa fa-trash"
+                                                                    @onclick="@(() => _showDeletePopup = true)"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@if (_showCreatePopup)
+{
+    <CreateMemberPopup OnClose="@(async () =>
+                                    {
+                                        _showCreatePopup = false;
+                                        await FetchData();
+                                    })"/>
+}
+
+@if (_showDeletePopup)
+{
+    <DeleteMemberPopup OnClose="@(async () =>
+                                {
+                                    _showDeletePopup = false;
+                                    await FetchData();
+                                })"
+                       MemberId="_selectedMember.Id"/>
+}
+
+@code {
+
+    private List<MemberModel> _members = [];
+    private bool _isLoading = true;
+    private bool _showCreatePopup;
+    private bool _showDeletePopup;
+
+    private MemberModel _selectedMember = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        _isLoading = true;
+        
+        try
+        {
+            _members = await MemberService.GetMembersAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to fetch data.");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+}
