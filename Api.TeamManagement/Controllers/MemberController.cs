@@ -56,6 +56,22 @@ public class MemberController(IMemberProvider memberProvider, ILogger<MemberCont
         }
     }
 
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateMemberStatus(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await memberProvider.UpdateMemberStatus(id, cancellationToken);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to update member status.");
+            return BadRequest();
+        }
+    }
+    
     [HttpPut]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateMember([FromBody] MemberModelDto member, CancellationToken cancellationToken)

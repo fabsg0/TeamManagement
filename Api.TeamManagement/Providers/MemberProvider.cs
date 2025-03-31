@@ -114,6 +114,20 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task UpdateMemberStatus(Guid id, CancellationToken cancellationToken)
+    {
+        var existingMember = await dbContext.TbMembers
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        
+        if (existingMember is null) throw new Exception("Member not found.");
+
+        existingMember.Status = existingMember.Status == "active" 
+            ? "inactive" 
+            :  "active";
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task UpdateMember(MemberModel member, List<Guid> departmentIds, CancellationToken cancellationToken)
     {
         var existingMember = await dbContext.TbMembers
