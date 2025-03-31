@@ -1,7 +1,10 @@
 ﻿@page "/"
+@using Api.TeamManagement.Entities
 @using Api.TeamManagement.Models
+@using Web.TeamManagement.Blazor.Models
 @using Web.TeamManagement.Blazor.Services.Contracts
 @inject IMemberService MemberService
+@inject IDepartmentService DepartmentService
 @inject ILogger<Home> Logger
 
 <PageTitle>Home</PageTitle>
@@ -37,6 +40,36 @@ else
         }
         </tbody>
     </table>
+
+
+    <form>
+        <div class="form-group">
+            <label for="firstName">FirstName</label>
+            <InputText type="text" class="form-control" id="firstName" placeholder="Enter firstName"
+                       @bind-Value="_memberToCreate.Member.FirstName"></InputText>
+        </div>
+        <div class="form-group">
+            <label for="lastName">LastName</label>
+            <InputText type="text" class="form-control" id="lastName" placeholder="Enter lastName"
+                       @bind-Value="_memberToCreate.Member.LastName"/>
+        </div>
+        <div class="form-group">
+            <label for="birthdate">Birthdate</label>
+            <InputDate Type="InputDateType.Date" class="form-control" id="birthdate" placeholder="Enter birthdate"
+                       @bind-Value="_birthDate"/>
+        </div>
+        <div class="form-group">
+            <label for="departments">Departments</label>
+            @foreach (var department in _departments)
+            {
+                <InputCheckbox @bind-Value="department.IsAssigned"></InputCheckbox>
+            }
+        </div>
+
+
+        <button type="button" class="btn btn-success" @onclick="CreateMember">Submit</button>
+
+    </form>
 }
 
 
@@ -44,21 +77,61 @@ else
 
     private List<MemberModel> _members = [];
     private bool _isLoading = true;
-    
+
+    private List<DepartmentModel> _departments = [];
+    private DateTime _birthDate;
+    private MemberModelDto _memberToCreate = new();
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _members = await MemberService.GetMembersAsync();
-            Logger.LogInformation("Members fetched.");
+            await FetchDepartments();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to fetch members.");
+            Logger.LogError(ex, "Failed to fetch data.");
         }
         finally
         {
             _isLoading = false;
+        }
+    }
+
+    private async Task FetchDepartments()
+    {
+        var department = await DepartmentService.GetDepartmentsAsync();
+
+        foreach (var dep in department)
+        {
+            _departments.Add(new DepartmentModel
+            {
+                Id = dep.Id,
+                Name = dep.Name,
+                IsAssigned = false
+            });
+        }
+    }
+
+    private async Task CreateMember()
+    {
+        try
+        {
+            foreach (var department in _departments)
+            {
+                if (department.IsAssigned)
+                {
+                    _memberToCreate.DepartmentIds.Add(department.Id);
+                }
+            }
+
+            _memberToCreate.Member.Birthdate = DateOnly.FromDateTime(_birthDate);
+            await MemberService.CreateMemberAsync(_memberToCreate);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create member.");
         }
     }
 
