@@ -1,5 +1,6 @@
 using Web.TeamManagement.Blazor.Components;
 using Web.TeamManagement.Blazor.Services;
+using Web.TeamManagement.Blazor.Services.Contracts;
 
 namespace Web.TeamManagement.Blazor;
 
@@ -9,8 +10,8 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddHttpClient<DepartmentService>();
-        builder.Services.AddHttpClient<MemberService>();
+        builder.Services.AddHttpClient<IDepartmentService, DepartmentService>();
+        builder.Services.AddHttpClient<IMemberService, MemberService>();
 
         // Add services to the container.
         builder.Services.AddRazorComponents()

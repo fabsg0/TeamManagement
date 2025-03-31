@@ -1,9 +1,10 @@
 ﻿using Api.TeamManagement.Entities;
 using Api.TeamManagement.Models;
+using Web.TeamManagement.Blazor.Services.Contracts;
 
 namespace Web.TeamManagement.Blazor.Services;
 
-public class DepartmentService(HttpClient httpClient)
+public class DepartmentService(HttpClient httpClient) : IDepartmentService
 {
     public async Task<List<TbDepartment>> GetDepartmentsAsync(CancellationToken cancellationToken = default)
     {
