@@ -12,43 +12,75 @@
 <PopUp IsVisible="true" IsVisibleChanged="@(async () => await OnClose.InvokeAsync())">
     <PopupHeader>Create Member</PopupHeader>
     <PopupContent>
-        <form>
-            <div class="form-group">
-                <label for="firstName">FirstName</label>
-                <InputText type="text" class="form-control" id="firstName" placeholder="Enter firstName"
-                           @bind-Value="_memberToCreate.Member.FirstName"></InputText>
+        <EditForm Model="_memberToCreate">
+            <div class="container-fluid">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">First Name</label>
+                        <InputText class="form-control" placeholder="John"
+                                   @bind-Value="_memberToCreate.Member.FirstName"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Last Name</label>
+                        <InputText class="form-control" placeholder="Doe"
+                                   @bind-Value="_memberToCreate.Member.LastName"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Birthdate</label>
+                        <InputDate class="form-control" @bind-Value="_birthDate"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <InputText type="email" class="form-control" placeholder="you@example.com"
+                                   @bind-Value="_memberToCreate.Member.Email"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone</label>
+                        <InputText class="form-control" placeholder="+1 234 567 890"
+                                   @bind-Value="_memberToCreate.Member.Telephone"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Street</label>
+                        <InputText class="form-control" placeholder="Main Street"
+                                   @bind-Value="_memberToCreate.Member.Street"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Number</label>
+                        <InputText class="form-control" placeholder="12A" @bind-Value="_memberToCreate.Member.Number"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Zip Code</label>
+                        <InputNumber class="form-control" placeholder="12345"
+                                     @bind-Value="_memberToCreate.Member.ZipCode"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">City</label>
+                        <InputText class="form-control" placeholder="City" @bind-Value="_memberToCreate.Member.City"/>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label mb-2">Departments</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var department in _departments)
+                            {
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="department.IsAssigned"/>
+                                    <label class="form-check-label">@department.Name</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="lastName">LastName</label>
-                <InputText type="text" class="form-control" id="lastName" placeholder="Enter lastName"
-                           @bind-Value="_memberToCreate.Member.LastName"/>
-            </div>
-            <div class="form-group">
-                <label for="birthdate">Birthdate</label>
-                <InputDate Type="InputDateType.Date" class="form-control" id="birthdate" placeholder="Enter birthdate"
-                           @bind-Value="_birthDate"/>
-            </div>
-            <div class="form-group">
-                <label>Departments</label>
-                <br/>
-                @foreach (var department in _departments)
-                {
-                    <InputCheckbox aria-describedby="departmentHelp"
-                                   @bind-Value="department.IsAssigned"></InputCheckbox>
-                    <small id="departmentHelp" class="form-text text-muted">@department.Name</small>
-                    <br/>
-                }
-            </div>
-        </form>
+        </EditForm>
     </PopupContent>
     <PopupFooter>
-        <button disabled="@_submitButtonDisabled"
-                type="button"
-                class="btn btn-success"
-                @onclick="CreateMember">
-            Submit
+        <button type="button" class="btn btn-success" @onclick="CreateMember" disabled="@_submitButtonDisabled">
+            <i class="bi bi-check-circle me-1"></i>Submit
         </button>
-        <button class="btn btn-danger" @onclick="OnClose">Cancel</button>
+        <button type="button" class="btn btn-secondary" @onclick="OnClose">
+            <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
     </PopupFooter>
 </PopUp>
 

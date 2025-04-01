@@ -1,0 +1,58 @@
+﻿@using Api.TeamManagement.Models
+@using Web.TeamManagement.Blazor.CustomComponents
+@using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.ToastMessage
+@inject IDepartmentService DepartmentService
+@inject ToastService Toast
+@inject ILogger<UpdateDepartmentPopup> Logger
+
+<PopUp IsVisible="true">
+    <PopupHeader>Update department</PopupHeader>
+    <PopupContent>
+        <EditForm Model="Department">
+            <div class="container-fluid">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Name</label>
+                        <InputText type="text" class="form-control" placeholder="Enter departmentName"
+                                   @bind-Value="Department.Name" required></InputText>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Icon</label>
+                        <InputText type="text" class="form-control" placeholder="Enter a icon"
+                                   @bind-Value="Department.Icon"/>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </PopupContent>
+    <PopupFooter>
+        <button type="button" class="btn btn-success" @onclick="UpdateDepartment">Save Changes</button>
+        <button type="button" class="btn btn-danger" @onclick="OnClose">Cancel</button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public required DepartmentDto Department { get; set; }
+    [Parameter] public required Guid DepartmentId { get; set; }
+
+    private async Task UpdateDepartment()
+    {
+        try
+        {
+            await DepartmentService.UpdateDepartmentAsync(DepartmentId, Department);
+            Toast.ShowSuccess("Department updated.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to update department.");
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+}

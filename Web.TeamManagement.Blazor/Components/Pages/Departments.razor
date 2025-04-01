@@ -1,40 +1,95 @@
 ﻿@page "/Departments"
 @using Api.TeamManagement.Entities
+@using Api.TeamManagement.Models
 @using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.Components.PopUps
 @inject IDepartmentService DepartmentService
 @inject ILogger<Departments> Logger
 
-<h3>Departments</h3>
+<div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Departments</h2>
+        <button type="button" class="btn btn-success" @onclick="() => _showCreatePopup = true">
+            <i class="fa fa-plus-circle me-1"></i> Create Member
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Icon</th>
+                <th class="text-end"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var department in _departments)
+            {
+                <tr @onclick="@(() => _selectedDepartment = department)"
+                    class="@(_selectedDepartment == department ? "table-active" : "")">
+                    <td>@department.Name</td>
+                    <td><i class="fa fa-@department.Icon"></i></td>
+                    <td>
+                        <button type="button" class="btn btn-warning" @onclick="@(() => OpenUpdatePopup(department))">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger" @onclick="@(() => OpenDeletePopup(department))">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
 
-<table class="table table-hover">
-    <thead>
-    <tr>
-        <th scope="col">Name</th>
-        <th scope="col">Icon</th>
-        <th scope="col"></th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var department in _departments)
-    {
-        <tr @onclick="@(() => _selectedDepartment = department)" class="@(_selectedDepartment == department ? "table-active" : "")">
-            <td>@department.Name</td>
-            <td><i class="fa fa-@department.Icon"></i></td>
-            <td>
-                <button type="button" class="btn btn-warning"><i class="fa fa-pen"></i></button>
-                <button type="button" class="btn btn-danger"><i class="fa fa-trash"></i></button>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+</div>
+
+
+@if (_showCreatePopup)
+{
+    <CreateDepartmentPopup OnClose="@(async () =>
+                                    {
+                                        _showCreatePopup = false;
+                                        await FetchDepartments();
+                                    })"/>
+}
+
+@if (_showUpdatePopup)
+{
+    <UpdateDepartmentPopup OnClose="@(async () =>
+                                    {
+                                        _showUpdatePopup = false;
+                                        await FetchDepartments();
+                                    })"
+                           DepartmentId="_selectedDepartment.Id"
+                           Department="@(new DepartmentDto { Name = _selectedDepartment.Name, Icon = _selectedDepartment.Icon })"/>
+}
+
+@if (_showDeletePopup)
+{
+    <DeleteDepartmentPopup OnClose="@(async () =>
+                                    {
+                                        _showDeletePopup = false;
+                                        await FetchDepartments();
+                                    })" Department="_selectedDepartment"/>
+}
 
 @code {
 
     private List<TbDepartment> _departments = [];
     private TbDepartment _selectedDepartment = new();
-    
+
+    private bool _showCreatePopup;
+    private bool _showUpdatePopup;
+    private bool _showDeletePopup;
+
     protected override async Task OnInitializedAsync()
+    {
+        await FetchDepartments();
+    }
+
+    private async Task FetchDepartments()
     {
         try
         {
@@ -45,4 +100,17 @@
             Logger.LogError(ex, "Failed to fetch departments.");
         }
     }
+
+    private void OpenUpdatePopup(TbDepartment department)
+    {
+        _selectedDepartment = department;
+        _showUpdatePopup = true;
+    }
+
+    private void OpenDeletePopup(TbDepartment department)
+    {
+        _selectedDepartment = department;
+        _showDeletePopup = true;
+    }
+
 }

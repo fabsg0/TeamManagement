@@ -1,0 +1,138 @@
+﻿@using Api.TeamManagement.Models
+@using Web.TeamManagement.Blazor.CustomComponents
+@using Web.TeamManagement.Blazor.Models
+@using Web.TeamManagement.Blazor.Services.Contracts
+@using Web.TeamManagement.Blazor.ToastMessage
+@inject IMemberService MemberService
+@inject IDepartmentService DepartmentService
+@inject ToastService Toast
+@inject ILogger<UpdateMemberPopup> Logger
+
+<PopUp IsVisible="true" IsVisibleChanged="@(async () => await OnClose.InvokeAsync())">
+    <PopupHeader>Update Member</PopupHeader>
+    <PopupContent>
+        <EditForm Model="_updateMember">
+            <div class="container-fluid">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">First Name</label>
+                        <InputText class="form-control" @bind-Value="_updateMember.Member.FirstName" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Last Name</label>
+                        <InputText class="form-control" @bind-Value="_updateMember.Member.LastName" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Birthdate</label>
+                        <InputDate class="form-control" @bind-Value="_updateMember.Member.Birthdate" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <InputText type="email" class="form-control" @bind-Value="_updateMember.Member.Email" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone</label>
+                        <InputText class="form-control" @bind-Value="_updateMember.Member.Telephone" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Street</label>
+                        <InputText class="form-control" @bind-Value="_updateMember.Member.Street" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Number</label>
+                        <InputText class="form-control" @bind-Value="_updateMember.Member.Number" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Zip Code</label>
+                        <InputNumber class="form-control" @bind-Value="_updateMember.Member.ZipCode" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">City</label>
+                        <InputText class="form-control" @bind-Value="_updateMember.Member.City" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label mb-2">Departments</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var department in _departments)
+                            {
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="department.IsAssigned" />
+                                    <label class="form-check-label">@department.Name</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </PopupContent>
+    <PopupFooter>
+        <button type="button" class="btn btn-success" @onclick="UpdateMember">
+            <i class="fa fa-check-circle me-1"></i>Save Changes
+        </button>
+        <button type="button" class="btn btn-secondary" @onclick="OnClose">
+            <i class="fa fa-x-circle me-1"></i>Cancel
+        </button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public required MemberModel Member { get; set; }
+
+    private MemberModelDto _updateMember = new()
+    {
+        Member = new MemberModel(),
+        DepartmentIds = []
+    };
+
+    private List<DepartmentModel> _departments = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _updateMember.Member = Member;
+
+        try
+        {
+            var departments = await DepartmentService.GetDepartmentsAsync();
+
+            _departments = departments
+                .Select(dep => new DepartmentModel
+                {
+                    Id = dep.Id,
+                    Name = dep.Name,
+                    IsAssigned = _updateMember.Member.Departments.Any(d => d.Name == dep.Name)
+                })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load departments.");
+            Toast.ShowError("Could not load departments.");
+        }
+    }
+
+    private async Task UpdateMember()
+    {
+        _updateMember.DepartmentIds = _departments
+            .Where(d => d.IsAssigned)
+            .Select(d => d.Id)
+            .ToList();
+
+        try
+        {
+            await MemberService.UpdateMemberAsync(_updateMember);
+            Toast.ShowSuccess("Member updated.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to update member.");
+            Toast.ShowError("Failed to update member.");
+        }
+        finally
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}
