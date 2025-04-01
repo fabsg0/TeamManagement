@@ -1,8 +1,6 @@
 ﻿@page "/"
-@using Api.TeamManagement.Models
-@using Web.TeamManagement.Blazor.Services.Contracts
-@using Web.TeamManagement.Blazor.Components.PopUps
 @inject IMemberService MemberService
+@inject ToastService Toast
 @inject ILogger<Home> Logger
 
 <PageTitle>Home</PageTitle>
@@ -68,6 +66,9 @@
                                     @onclick="@(_ => OpenUpdatePopup(member))">
                                 <i class="fa fa-pen"></i>
                             </button>
+                            <button type="button" class="btn btn-sm btn-success"
+                                    @onclick="@(async () => await ChangeMemberStatus(member))">
+                                Status</button>
                             <button type="button" class="btn btn-sm btn-danger"
                                     @onclick="@(_ => OpenDeletePopup(member))">
                                 <i class="fa fa-trash"></i>
@@ -118,10 +119,29 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to fetch members.");
+            Toast.ShowError(ex.Message);
         }
         finally
         {
             _isLoading = false;
+        }
+    }
+
+    private async Task ChangeMemberStatus(MemberModel member)
+    {
+        try
+        {
+            await MemberService.UpdateMemberStatusAsync(member.Id);
+            Toast.ShowSuccess("Changed memberStatus");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to update memberStatus.");
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            await FetchData();
         }
     }
 
