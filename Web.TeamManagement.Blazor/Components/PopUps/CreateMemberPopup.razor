@@ -21,7 +21,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Birthdate</label>
-                        <InputDate class="form-control" @bind-Value="_birthDate"/>
+                        <InputDate class="form-control" @bind-Value="_memberToCreate.Member.Birthdate"/>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Email</label>
@@ -131,7 +131,7 @@
                 }
             }
 
-            _memberToCreate.Member.Birthdate = DateOnly.FromDateTime(_birthDate);
+            //_memberToCreate.Member.Birthdate = DateOnly.FromDateTime(_birthDate);
             var response = await MemberService.CreateMemberAsync(_memberToCreate);
 
             if (response.StatusCode != HttpStatusCode.Created)
