@@ -1,0 +1,54 @@
+﻿@inject IDepartmentService DepartmentService
+@inject ToastService Toast
+@inject ILogger<CreateDepartmentPopup> Logger
+
+<PopUp IsVisible="true">
+    <PopupHeader>Create department</PopupHeader>
+    <PopupContent>
+        <EditForm Model="_department">
+            <div class="container-fluid">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Name</label>
+                        <InputText type="text" class="form-control" placeholder="Enter departmentName"
+                                   @bind-Value="_department.Name" required></InputText>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Icon</label>
+                        <InputText type="text" class="form-control" placeholder="Enter a icon"
+                                   @bind-Value="_department.Icon"/>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </PopupContent>
+    <PopupFooter>
+        <button type="button" class="btn btn-success" @onclick="CreateDepartment">Create</button>
+        <button type="button" class="btn btn-danger" @onclick="OnClose">Cancel</button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private DepartmentDto _department = new();
+
+    private async Task CreateDepartment()
+    {
+        try
+        {
+            await DepartmentService.CreateDepartmentAsync(_department);
+            Toast.ShowSuccess("Department created.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create department.");
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+}

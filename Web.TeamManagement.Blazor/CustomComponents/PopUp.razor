@@ -1,27 +1,20 @@
-﻿<div class="@(IsVisible ? "showAnim" : "d-none")">
-    <div class="modal fade show" tabindex="-1" role="dialog" style="display: block">
-        <div class="modal-dialog" style="margin:1.75rem auto; --bs-modal-width: 500px">
-            <div class="modal-content" style="--bs-modal-bg: white;">
-                <div class="modal-header bg-primary" style="--bs-modal-header-padding: 1rem 1rem;">
-                    <div class="modal-title text-white">@PopupHeader</div>
-                </div>
-                <div class="modal-body" style="--bs-modal-padding: 1rem;">
-                    @PopupContent
-                </div>
-                <div class="modal-footer"
-                     style="
-                     --bs-modal-padding: .75rem; 
-                     --bs-modal-footer-gap: .75rem; 
-                     --bs-modal-footer-border-width: 1px; 
-                     --bs-modal-footer-border-color: #dee2e6;">
-                    @PopupFooter
-                </div>
+﻿<div class="modal @(IsVisible ? "d-block show" : "d-none")" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content shadow-lg rounded-3">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">@PopupHeader</h5>
+            </div>
+            <div class="modal-body">
+                @PopupContent
+            </div>
+            <div class="modal-footer">
+                @PopupFooter
             </div>
         </div>
     </div>
 </div>
 
-<div class="@(IsVisible ? "show" : "d-none") modal-backdrop fade"></div>
+<div class="modal-backdrop fade @(IsVisible ? "show" : "")"></div>
 
 @code {
     [Parameter] public bool IsVisible { get; set; }

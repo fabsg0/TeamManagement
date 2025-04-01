@@ -1,105 +1,176 @@
 ﻿@page "/"
-@using Api.TeamManagement.Models
-@using Web.TeamManagement.Blazor.Services.Contracts
-@using Web.TeamManagement.Blazor.Components.PopUps
 @inject IMemberService MemberService
+@inject ToastService Toast
 @inject ILogger<Home> Logger
 
 <PageTitle>Home</PageTitle>
 
-@if (_isLoading)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <button type="button" class="btn btn-primary" @onclick="@(() => _showCreatePopup = true)">Create</button>
-    <br/>
+<div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold">Members</h2>
+        <button type="button" class="btn btn-success" @onclick="() => _showCreatePopup = true">
+            <i class="fa fa-plus-circle me-1"></i> Create Member
+        </button>
+    </div>
 
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th scope="col">FirstName</th>
-            <th scope="col">LastName</th>
-            <th scope="col">BirthDate</th>
-            <th scope="col">Status</th>
-            <th scope="col">MembershipFee</th>
-            <th scope="col">Departments</th>
-            <th scope="col"></th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var member in _members)
-        {
-            <tr @onclick="@(() => _selectedMember = member)" class="@(_selectedMember == member ? "table-active" : "")">
-                <td>@member.FirstName</td>
-                <td>@member.LastName</td>
-                <td>@member.Birthdate.ToString()</td>
-                <td>@member.Status</td>
-                <td>@member.MembershipFee</td>
-                <td>@string.Join(",", member.Departments.Select(x => x.Name))</td>
-                <td>
-                    <button type="button" class="btn btn-warning"><i class="fa fa-pen"></i></button>
-                    <button type="button" class="btn btn-danger"><i class="fa fa-trash"
-                                                                    @onclick="@(() => _showDeletePopup = true)"></i>
-                    </button>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+    @if (_isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3">Loading members...</p>
+        </div>
+    }
+    else if (!_members.Any())
+    {
+        <div class="alert alert-info text-center">
+            No members found. Click "Create Member" to get started.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Birthdate</th>
+                    <th>Status</th>
+                    <th>Fee</th>
+                    <th>City</th>
+                    <th>Departments</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var member in _members)
+                {
+                    <tr class="@(_selectedMember == member ? "table-active" : "")"
+                        @onclick="() => _selectedMember = member">
+                        <td>@member.FirstName</td>
+                        <td>@member.LastName</td>
+                        <td>@member.Birthdate</td>
+                        <td>
+                            <span class="badge bg-@GetStatusColor(member.Status)">@member.Status</span>
+                        </td>
+                        <td>€@member.MembershipFee</td>
+                        <td>@member.City</td>
+                        <td>
+                            @foreach (var dept in member.Departments)
+                            {
+                                <span class="badge bg-secondary me-1">@dept.Name</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-warning me-1"
+                                    @onclick="@(_ => OpenUpdatePopup(member))">
+                                <i class="fa fa-pen"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-success"
+                                    @onclick="@(async () => await ChangeMemberStatus(member))">
+                                Status</button>
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    @onclick="@(_ => OpenDeletePopup(member))">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
 
-@if (_showCreatePopup)
-{
-    <CreateMemberPopup OnClose="@(async () =>
-                                    {
-                                        _showCreatePopup = false;
-                                        await FetchData();
-                                    })"/>
-}
+    @if (_showCreatePopup)
+    {
+        <CreateMemberPopup OnClose="async () => await HandlePopupClose()"/>
+    }
 
-@if (_showDeletePopup)
-{
-    <DeleteMemberPopup OnClose="@(async () =>
-                                {
-                                    _showDeletePopup = false;
-                                    await FetchData();
-                                })"
-                       MemberId="_selectedMember.Id"/>
-}
+    @if (_showUpdatePopup)
+    {
+        <UpdateMemberPopup Member="_selectedMember" OnClose="async () => await HandlePopupClose()"/>
+    }
+
+    @if (_showDeletePopup)
+    {
+        <DeleteMemberPopup Member="_selectedMember" OnClose="async () => await HandlePopupClose()"/>
+    }
+</div>
+
 
 @code {
-
     private List<MemberModel> _members = [];
     private bool _isLoading = true;
     private bool _showCreatePopup;
     private bool _showDeletePopup;
+    private bool _showUpdatePopup;
 
     private MemberModel _selectedMember = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await FetchData();
-    }
+    protected override async Task OnInitializedAsync() => await FetchData();
 
     private async Task FetchData()
     {
         _isLoading = true;
-        
         try
         {
             _members = await MemberService.GetMembersAsync();
-
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to fetch data.");
+            Logger.LogError(ex, "Failed to fetch members.");
+            Toast.ShowError(ex.Message);
         }
         finally
         {
             _isLoading = false;
         }
     }
+
+    private async Task ChangeMemberStatus(MemberModel member)
+    {
+        try
+        {
+            await MemberService.UpdateMemberStatusAsync(member.Id);
+            Toast.ShowSuccess("Member status updated.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to update memberStatus.");
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            await FetchData();
+        }
+    }
+
+    private async Task HandlePopupClose()
+    {
+        _showCreatePopup = false;
+        _showUpdatePopup = false;
+        _showDeletePopup = false;
+        _selectedMember = new MemberModel();
+        await FetchData();
+    }
+
+    private void OpenUpdatePopup(MemberModel member)
+    {
+        _selectedMember = member;
+        _showUpdatePopup = true;
+    }
+
+    private void OpenDeletePopup(MemberModel member)
+    {
+        _selectedMember = member;
+        _showDeletePopup = true;
+    }
+
+    private static string GetStatusColor(string status) => status switch
+    {
+        "active" => "success",
+        "inactive" => "secondary",
+        _ => "dark"
+    };
 
 }

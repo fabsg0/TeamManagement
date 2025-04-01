@@ -1,0 +1,36 @@
+﻿@inject IDepartmentService DepartmentService
+@inject ToastService Toast
+@inject ILogger<DeleteDepartmentPopup> Logger
+
+<PopUp IsVisible="true">
+    <PopupHeader>Delete Department <strong>@Department.Name</strong></PopupHeader>
+    <PopupContent><strong>Are you sure, you want to delete this department?</strong></PopupContent>
+    <PopupFooter>
+        <button type="button" @onclick="DeleteDepartment" class="btn btn-danger">Delete</button>
+        <button type="button" @onclick="OnClose" class="btn btn-secondary">Cancel</button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public required TbDepartment Department { get; set; }
+
+    private async Task DeleteDepartment()
+    {
+        try
+        {
+            await DepartmentService.DeleteDepartmentAsync(Department.Id);
+            Toast.ShowSuccess("Department deleted.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to delete department.");
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+}

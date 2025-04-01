@@ -4,9 +4,13 @@
 
 @if (ShowMessage)
 {
-    <div class="toast-message-container">
-        <div class="toast-message-box @MessageTypeClass">
-            <span class="toast-message-content">@MessageContent</span>
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+        <div class="toast show align-items-center text-white @MessageTypeClass border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @MessageContent
+                </div>
+            </div>
         </div>
     </div>
 }
@@ -19,11 +23,11 @@
 
     private string MessageTypeClass => MessageType switch
     {
-        "success" => "toast-message-success",
-        "failure" => "toast-message-failure",
-        "alert" => "toast-message-alert",
-        "warning" => "toast-message-warning",
-        _ => "toast-message-default"
+        "success" => "bg-success",
+        "failure" or "error" => "bg-danger",
+        "alert" or "info" => "bg-info",
+        "warning" => "bg-warning text-dark",
+        _ => "bg-secondary"
     };
 
     protected override async Task OnParametersSetAsync()
