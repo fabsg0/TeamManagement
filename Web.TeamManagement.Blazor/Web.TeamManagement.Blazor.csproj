@@ -10,4 +10,9 @@
       <ProjectReference Include="..\Api.TeamManagement\Api.TeamManagement.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="BlazorDownloadFile" Version="2.4.0.2" />
+      <PackageReference Include="ClosedXML" Version="0.104.2" />
+    </ItemGroup>
+
 </Project>

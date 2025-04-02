@@ -1,17 +1,55 @@
 ﻿@page "/"
+@using BlazorDownloadFile
 @inject IMemberService MemberService
+@inject IDepartmentService DepartmentService
 @inject ToastService Toast
+@inject IBlazorDownloadFileService BlazorDownloadFileService
 @inject ILogger<Home> Logger
 
 <PageTitle>Home</PageTitle>
 
-<div>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold">Members</h2>
-        <button type="button" class="btn btn-success" @onclick="() => _showCreatePopup = true">
-            <i class="fa fa-plus-circle me-1"></i> Create Member
-        </button>
+<div class="container">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Filter by Department</label>
+                    <select class="form-select" @onchange="OnDepartmentChanged">
+                        <option value="">All Departments</option>
+                        @foreach (var department in _departments)
+                        {
+                        <option value="@department.Id">@department.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Search by Name</label>
+                    <div class="input-group">
+                        <input class="form-control" type="text" placeholder="Search members..."
+                               @bind="_searchText"
+                               @bind:event="oninput"
+                               @onkeydown="@(e => { if (e.Key == "Enter") FilterMembers(); })" />
+                        <button class="btn btn-primary" type="button" @onclick="FilterMembers">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex justify-content-md-end gap-2">
+                    <button class="btn btn-success" @onclick="() => _showCreatePopup = true">
+                        <i class="fa fa-plus-circle me-1"></i> Create Member
+                    </button>
+                    <button class="btn btn-secondary" @onclick="ExportExcel" disabled="@_isExporting">
+                        <i class="fa fa-file-excel me-1"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <h2 class="fw-bold mb-3">Members</h2>
 
     @if (_isLoading)
     {
@@ -20,7 +58,7 @@
             <p class="mt-3">Loading members...</p>
         </div>
     }
-    else if (!_members.Any())
+    else if (!_filteredMembers.Any())
     {
         <div class="alert alert-info text-center">
             No members found. Click "Create Member" to get started.
@@ -29,12 +67,12 @@
     else
     {
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover">
                 <thead class="table-light">
                 <tr>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Birthdate</th>
+                    <th @onclick="() => SortBy(nameof(MemberModel.FirstName))" style="cursor:pointer">First Name</th>
+                    <th @onclick="() => SortBy(nameof(MemberModel.LastName))" style="cursor:pointer">Last Name</th>
+                    <th @onclick="() => SortBy(nameof(MemberModel.Birthdate))" style="cursor:pointer">Birthdate</th>
                     <th>Status</th>
                     <th>Fee</th>
                     <th>City</th>
@@ -43,10 +81,9 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var member in _members)
+                @foreach (var member in _filteredMembers)
                 {
-                    <tr class="@(_selectedMember == member ? "table-active" : "")"
-                        @onclick="() => _selectedMember = member">
+                    <tr class="@(_selectedMember == member ? "table-active" : "")" @onclick="() => _selectedMember = member">
                         <td>@member.FirstName</td>
                         <td>@member.LastName</td>
                         <td>@member.Birthdate</td>
@@ -62,15 +99,13 @@
                             }
                         </td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-warning me-1"
-                                    @onclick="@(_ => OpenUpdatePopup(member))">
+                            <button class="btn btn-sm btn-warning me-1" @onclick="@(_ => OpenUpdatePopup(member))">
                                 <i class="fa fa-pen"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-success"
-                                    @onclick="@(async () => await ChangeMemberStatus(member))">
-                                Status</button>
-                            <button type="button" class="btn btn-sm btn-danger"
-                                    @onclick="@(_ => OpenDeletePopup(member))">
+                            <button class="btn btn-sm btn-success" @onclick="@(async () => await ChangeMemberStatus(member))">
+                                Status
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="@(_ => OpenDeletePopup(member))">
                                 <i class="fa fa-trash"></i>
                             </button>
                         </td>
@@ -83,28 +118,31 @@
 
     @if (_showCreatePopup)
     {
-        <CreateMemberPopup OnClose="async () => await HandlePopupClose()"/>
+        <CreateMemberPopup OnClose="HandlePopupClose"/>
     }
-
     @if (_showUpdatePopup)
     {
-        <UpdateMemberPopup Member="_selectedMember" OnClose="async () => await HandlePopupClose()"/>
+        <UpdateMemberPopup Member="_selectedMember" OnClose="HandlePopupClose"/>
     }
-
     @if (_showDeletePopup)
     {
-        <DeleteMemberPopup Member="_selectedMember" OnClose="async () => await HandlePopupClose()"/>
+        <DeleteMemberPopup Member="_selectedMember" OnClose="HandlePopupClose"/>
     }
 </div>
 
-
 @code {
-    private List<MemberModel> _members = [];
+    private List<MemberModel> _allMembers = [];
+    private List<MemberModel> _filteredMembers = [];
+    private List<TbDepartment> _departments = [];
     private bool _isLoading = true;
+    private bool _isExporting;
     private bool _showCreatePopup;
     private bool _showDeletePopup;
     private bool _showUpdatePopup;
-
+    private Guid? _selectedDepartmentId;
+    private string _searchText = string.Empty;
+    private string _sortColumn = nameof(MemberModel.LastName);
+    private bool _sortAscending = true;
     private MemberModel _selectedMember = new();
 
     protected override async Task OnInitializedAsync() => await FetchData();
@@ -114,17 +152,76 @@
         _isLoading = true;
         try
         {
-            _members = await MemberService.GetMembersAsync();
+            _allMembers = await MemberService.GetMembersAsync();
+            _departments = await DepartmentService.GetDepartmentsAsync();
+            FilterMembers();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to fetch members.");
+            Logger.LogError(ex, "Failed to fetch data.");
             Toast.ShowError(ex.Message);
         }
         finally
         {
             _isLoading = false;
         }
+    }
+
+    private void OnDepartmentChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var id))
+            _selectedDepartmentId = id;
+        else
+            _selectedDepartmentId = null;
+
+        FilterMembers();
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+
+        FilterMembers();
+    }
+
+    private void FilterMembers()
+    {
+        var query = _allMembers.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            query = query.Where(m =>
+                m.FirstName.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                m.LastName.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (_selectedDepartmentId.HasValue)
+        {
+            query = query.Where(m => m.Departments.Any(d => d.Id == _selectedDepartmentId));
+        }
+
+        query = _sortColumn switch
+        {
+            nameof(MemberModel.FirstName) => _sortAscending ? query.OrderBy(m => m.FirstName) : query.OrderByDescending(m => m.FirstName),
+            nameof(MemberModel.Birthdate) => _sortAscending ? query.OrderBy(m => m.Birthdate) : query.OrderByDescending(m => m.Birthdate),
+            _ => _sortAscending ? query.OrderBy(m => m.LastName) : query.OrderByDescending(m => m.LastName),
+        };
+
+        _filteredMembers = query.ToList();
+    }
+    
+    private void ClearSearch()
+    {
+        _searchText = string.Empty;
+        FilterMembers();
     }
 
     private async Task ChangeMemberStatus(MemberModel member)
@@ -136,12 +233,73 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to update memberStatus.");
+            Logger.LogError(ex, "Failed to update status.");
             Toast.ShowError(ex.Message);
         }
         finally
         {
             await FetchData();
+        }
+    }
+
+    private async Task ExportExcel()
+    {
+        try
+        {
+            Toast.ShowInfo("Excel export started.");
+            _isExporting = true;
+
+            var workbook = new ClosedXML.Excel.XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Members");
+
+            worksheet.Cell(1, 1).Value = "FirstName";
+            worksheet.Cell(1, 2).Value = "LastName";
+            worksheet.Cell(1, 3).Value = "Birthdate";
+            worksheet.Cell(1, 4).Value = "Email";
+            worksheet.Cell(1, 5).Value = "Telephone";
+            worksheet.Cell(1, 6).Value = "Street";
+            worksheet.Cell(1, 7).Value = "Number";
+            worksheet.Cell(1, 8).Value = "ZipCode";
+            worksheet.Cell(1, 9).Value = "City";
+            worksheet.Cell(1, 10).Value = "Status";
+            worksheet.Cell(1, 11).Value = "MembershipFee";
+            worksheet.Cell(1, 12).Value = "Departments";
+
+            for (var i = 0; i < _filteredMembers.Count; i++)
+            {
+                var member = _filteredMembers[i];
+                var departments = string.Join(", ", member.Departments.Select(d => d.Name));
+
+                worksheet.Cell(i + 2, 1).Value = member.FirstName;
+                worksheet.Cell(i + 2, 2).Value = member.LastName;
+                worksheet.Cell(i + 2, 3).Value = member.Birthdate?.ToString();
+                worksheet.Cell(i + 2, 4).Value = member.Email;
+                worksheet.Cell(i + 2, 5).Value = member.Telephone;
+                worksheet.Cell(i + 2, 6).Value = member.Street;
+                worksheet.Cell(i + 2, 7).Value = member.Number;
+                worksheet.Cell(i + 2, 8).Value = member.ZipCode;
+                worksheet.Cell(i + 2, 9).Value = member.City;
+                worksheet.Cell(i + 2, 10).Value = member.Status;
+                worksheet.Cell(i + 2, 11).Value = member.MembershipFee;
+                worksheet.Cell(i + 2, 12).Value = departments;
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            var fileName = $"Members_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            await BlazorDownloadFileService.DownloadFile(fileName, stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            Toast.ShowSuccess("Excel sheet was exported.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to export Excel.");
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            _isExporting = false;
         }
     }
 

@@ -18,5 +18,5 @@ public class ToastService
     public void ShowSuccess(string message, int dismissAfter = 5) => ShowToast(message, "success", dismissAfter);
     public void ShowError(string message, int dismissAfter = 5) => ShowToast(message, "failure", dismissAfter);
     public void ShowWarning(string message, int dismissAfter = 5) => ShowToast(message, "warning", dismissAfter);
-    public void ShowSInfo(string message, int dismissAfter = 5) => ShowToast(message, "info", dismissAfter);
+    public void ShowInfo(string message, int dismissAfter = 5) => ShowToast(message, "info", dismissAfter);
 }
