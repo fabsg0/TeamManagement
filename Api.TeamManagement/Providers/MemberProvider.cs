@@ -34,6 +34,7 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
                 Departments = departmentMembers.Where(x => x.MemberId == rawMember.Id)
                     .Select(x => new DepartmentInfoModel
                     {
+                        Id = x.Department?.Id ?? Guid.Empty,
                         Name = x.Department?.Name,
                         Icon = x.Department?.Icon
                     })
@@ -72,6 +73,7 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
                 .Where(x => x.MemberId == rawMember.Id)
                 .Select(x => new DepartmentInfoModel
                 {
+                    Id = x.Department?.Id ?? Guid.Empty,
                     Name = x.Department?.Name,
                     Icon = x.Department?.Icon
                 })
