@@ -1,3 +1,4 @@
+using BlazorDownloadFile;
 using Web.TeamManagement.Blazor.Components;
 using Web.TeamManagement.Blazor.Services;
 using Web.TeamManagement.Blazor.Services.Contracts;
@@ -14,6 +15,7 @@ internal class Program
         builder.Services.AddScoped<ToastService>();
         builder.Services.AddHttpClient<IDepartmentService, DepartmentService>();
         builder.Services.AddHttpClient<IMemberService, MemberService>();
+        builder.Services.AddBlazorDownloadFile();
 
         // Add services to the container.
         builder.Services.AddRazorComponents()

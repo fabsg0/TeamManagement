@@ -1,6 +1,8 @@
 ﻿@page "/"
+@using BlazorDownloadFile
 @inject IMemberService MemberService
 @inject ToastService Toast
+@inject IBlazorDownloadFileService BlazorDownloadFileService
 @inject ILogger<Home> Logger
 
 <PageTitle>Home</PageTitle>
@@ -10,6 +12,12 @@
         <h2 class="fw-bold">Members</h2>
         <button type="button" class="btn btn-success" @onclick="() => _showCreatePopup = true">
             <i class="fa fa-plus-circle me-1"></i> Create Member
+        </button>
+        <button type="button" 
+                disabled="@(_isExporting)"
+                class="btn btn-secondary" 
+                @onclick="ExportExcel">
+            Export
         </button>
     </div>
 
@@ -101,6 +109,7 @@
 @code {
     private List<MemberModel> _members = [];
     private bool _isLoading = true;
+    private bool _isExporting;
     private bool _showCreatePopup;
     private bool _showDeletePopup;
     private bool _showUpdatePopup;
@@ -142,6 +151,67 @@
         finally
         {
             await FetchData();
+        }
+    }
+
+    private async Task ExportExcel()
+    {
+        try
+        {
+            Toast.ShowSInfo("Excel export started.");
+            _isExporting = true;
+
+            var workbook = new ClosedXML.Excel.XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Members");
+
+            worksheet.Cell(1, 1).Value = "Id";
+            worksheet.Cell(1, 2).Value = "FirstName";
+            worksheet.Cell(1, 3).Value = "LastName";
+            worksheet.Cell(1, 4).Value = "Birthdate";
+            worksheet.Cell(1, 5).Value = "Email";
+            worksheet.Cell(1, 6).Value = "Telephone";
+            worksheet.Cell(1, 7).Value = "Street";
+            worksheet.Cell(1, 8).Value = "Number";
+            worksheet.Cell(1, 9).Value = "ZipCode";
+            worksheet.Cell(1, 10).Value = "City";
+            worksheet.Cell(1, 11).Value = "Status";
+            worksheet.Cell(1, 12).Value = "MembershipFee";
+            worksheet.Cell(1, 13).Value = "Departments";
+
+            for (var i = 0; i < _members.Count; i++)
+            {
+                var member = _members[i];
+                var departments = string.Join(", ", member.Departments.Select(d => d.Name));
+                
+                worksheet.Cell(i + 2, 1).Value = member.Id.ToString();
+                worksheet.Cell(i + 2, 2).Value = member.FirstName;
+                worksheet.Cell(i + 2, 3).Value = member.LastName;
+                worksheet.Cell(i + 2, 4).Value = member.Birthdate.ToString();
+                worksheet.Cell(i + 2, 5).Value = member.Email;
+                worksheet.Cell(i + 2, 6).Value = member.Telephone;
+                worksheet.Cell(i + 2, 7).Value = member.Street;
+                worksheet.Cell(i + 2, 8).Value = member.Number;
+                worksheet.Cell(i + 2, 9).Value = member.ZipCode;
+                worksheet.Cell(i + 2, 10).Value = member.City;
+                worksheet.Cell(i + 2, 11).Value = member.Status;
+                worksheet.Cell(i + 2, 12).Value = member.MembershipFee;
+                worksheet.Cell(i + 2, 13).Value = departments;
+            }
+
+            var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            var fileName = $"Members_{DateTime.Now}.xlsx";
+
+            await BlazorDownloadFileService.DownloadFile(fileName, stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            _isExporting = false;
+            Toast.ShowSuccess("Excel sheet was exported.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to export excel sheet.");
+            Toast.ShowError(ex.Message);
         }
     }
 
