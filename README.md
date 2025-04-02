@@ -46,8 +46,6 @@ A modern Blazor application to manage teams — ideal for sports clubs, departme
    dotnet run --project Web.TeamManagement.Blazor
    ```
 
-5. Navigate to `https://localhost:5001`
-
 ## Technologies Used
 
 - Blazor Server
