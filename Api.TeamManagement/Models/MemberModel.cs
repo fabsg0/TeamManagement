@@ -25,6 +25,7 @@ public class MemberModel
     public string Status { get; set; } = null!;
 
     public int MembershipFee { get; set; }
+    public bool MembershipPaid { get; set; }
 
     public List<DepartmentInfoModel> Departments { get; set; } = [];
 }

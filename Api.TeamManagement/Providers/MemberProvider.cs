@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.TeamManagement.Providers;
 
-public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
+public class MemberProvider(TeamManagementDbContext dbContext, IPaymentProvider paymentProvider) : IMemberProvider
 {
     public async Task<List<MemberModel>> GetMembers(CancellationToken cancellationToken)
     {
@@ -38,7 +38,8 @@ public class MemberProvider(TeamManagementDbContext dbContext) : IMemberProvider
                         Name = x.Department?.Name,
                         Icon = x.Department?.Icon
                     })
-                    .ToList()
+                    .ToList(),
+                MembershipPaid = paymentProvider.IsMembershipPaid(rawMember.Id, cancellationToken).Result
             })
             .ToList();
     }

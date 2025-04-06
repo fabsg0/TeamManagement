@@ -1,0 +1,56 @@
+﻿@inject IPaymentService PaymentService
+@inject ToastService Toast
+@inject ILogger<PayPopup> Logger
+
+<PopUp IsVisible="true">
+    <PopupHeader>Process payment of @Member.FirstName @Member.LastName</PopupHeader>
+    <PopupContent>
+        <EditForm Model="_payment">
+            <div class="container-fluid">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Amount</label>
+                        <InputNumber class="form-control" placeholder="20"
+                                     @bind-Value="_payment.PaymentAmount"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Period</label>
+                        <InputNumber class="form-control" placeholder="2020"
+                                     @bind-Value="_payment.PaymentPeriod"/>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </PopupContent>
+    <PopupFooter>
+        <button type="button" class="btn btn-success" @onclick="Pay">Create</button>
+        <button type="button" class="btn btn-danger" @onclick="OnClose">Cancel</button>
+    </PopupFooter>
+</PopUp>
+
+@code {
+    [Parameter] public required MemberModel Member { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private PaymentModel _payment = new();
+
+    private async Task Pay()
+    {
+        try
+        {
+            _payment.MemberId = Member.Id;
+
+            await PaymentService.PayMembership(_payment);
+            Toast.ShowSuccess("Payment processed.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to process payment.");
+            Toast.ShowError("Failed to process payment.");
+        }
+        finally
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}

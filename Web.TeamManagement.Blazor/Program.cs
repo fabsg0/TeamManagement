@@ -15,6 +15,7 @@ internal class Program
         builder.Services.AddScoped<ToastService>();
         builder.Services.AddHttpClient<IDepartmentService, DepartmentService>();
         builder.Services.AddHttpClient<IMemberService, MemberService>();
+        builder.Services.AddHttpClient<IPaymentService, PaymentService>();
         builder.Services.AddBlazorDownloadFile();
 
         // Add services to the container.

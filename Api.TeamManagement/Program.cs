@@ -17,6 +17,7 @@ internal class Program
 
         builder.Services.AddScoped<IDepartmentProvider, DepartmentProvider>();
         builder.Services.AddScoped<IMemberProvider, MemberProvider>();
+        builder.Services.AddScoped<IPaymentProvider, PaymentProvider>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
