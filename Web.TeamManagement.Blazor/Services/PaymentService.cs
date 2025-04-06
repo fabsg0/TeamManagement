@@ -9,20 +9,20 @@ public class PaymentService(HttpClient httpClient) : IPaymentService
     {
         var payments =
             await httpClient.GetFromJsonAsync<List<PaymentModel>>(
-                $"http://localhost:5179/Payment/GetPaymentsByYear/{year}", cancellationToken);
+                $"/Payment/GetPaymentsByYear/{year}", cancellationToken);
         return payments ?? [];
     }
     
     public async Task<bool> IsMembershipPaidAsync(Guid memberId, CancellationToken cancellationToken = default)
     {
         var isPaid = await httpClient.GetFromJsonAsync<bool>(
-                $"http://localhost:5179/Payment/IsMembershipPaid/{memberId}", cancellationToken);
+                $"/Payment/IsMembershipPaid/{memberId}", cancellationToken);
         return isPaid;
     }
 
     public async Task PayMembership(PaymentModel payment, CancellationToken cancellationToken = default)
     {
-        await httpClient.PostAsync("http://localhost:5179/Payment/PayMembership",
+        await httpClient.PostAsync("/Payment/PayMembership",
             JsonContent.Create(payment), cancellationToken);
     }
 }
