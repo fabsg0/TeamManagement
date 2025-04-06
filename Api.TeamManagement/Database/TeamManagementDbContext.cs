@@ -10,7 +10,9 @@ public partial class TeamManagementDbContext(DbContextOptions<TeamManagementDbCo
     public virtual DbSet<TbDepartmentMember> TbDepartmentMembers { get; set; }
 
     public virtual DbSet<TbMember> TbMembers { get; set; }
-    
+
+    public virtual DbSet<TbMembershipFeePayment> TbMembershipFeePayments { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TbDepartment>(entity =>
@@ -25,8 +27,6 @@ public partial class TeamManagementDbContext(DbContextOptions<TeamManagementDbCo
         modelBuilder.Entity<TbDepartmentMember>(entity =>
         {
             entity.ToTable("tbDepartmentMember");
-
-            entity.HasIndex(e => new { e.MemberId, e.DepartmentId }, "IX_DepartmentMember_Unique").IsUnique();
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
 
@@ -54,6 +54,20 @@ public partial class TeamManagementDbContext(DbContextOptions<TeamManagementDbCo
                 .HasDefaultValue("active");
             entity.Property(e => e.Street).HasMaxLength(100);
             entity.Property(e => e.Telephone).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TbMembershipFeePayment>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_tbMemberId");
+
+            entity.ToTable("tbMembershipFeePayments");
+
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.PaymentPeriod).HasDefaultValueSql("(datepart(year,getdate()))");
+
+            entity.HasOne(d => d.Member).WithMany(p => p.TbMembershipFeePayments)
+                .HasForeignKey(d => d.MemberId)
+                .HasConstraintName("FK_tbMembershipFeePayments_tbMembers");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,14 +1,14 @@
 ﻿namespace Api.TeamManagement.Entities;
 
-public partial class TbDepartmentMember
+public partial class TbMembershipFeePayment
 {
     public Guid Id { get; set; }
 
     public Guid? MemberId { get; set; }
 
-    public Guid? DepartmentId { get; set; }
+    public int PaymentAmount { get; set; }
 
-    public virtual TbDepartment? Department { get; set; }
+    public int? PaymentPeriod { get; set; }
 
     public virtual TbMember? Member { get; set; }
 }

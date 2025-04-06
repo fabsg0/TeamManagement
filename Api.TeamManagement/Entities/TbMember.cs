@@ -27,4 +27,6 @@ public partial class TbMember
     public int MembershipFee { get; set; }
 
     public virtual ICollection<TbDepartmentMember> TbDepartmentMembers { get; set; } = new List<TbDepartmentMember>();
+
+    public virtual ICollection<TbMembershipFeePayment> TbMembershipFeePayments { get; set; } = new List<TbMembershipFeePayment>();
 }
